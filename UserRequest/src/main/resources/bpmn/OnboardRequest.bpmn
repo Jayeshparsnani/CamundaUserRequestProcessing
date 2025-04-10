@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_102av75" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.32.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.5.0">
+  <bpmn:process id="onboardRequest" name="OnboardRequest" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0d0n32k</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_049t1pf">
+      <bpmn:incoming>Flow_0gd6dqx</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0d0n32k" sourceRef="StartEvent_1" targetRef="processRequest" />
+    <bpmn:serviceTask id="processRequest" name="Process Incoming Request">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="processRequest" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0d0n32k</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nn21ju</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0nn21ju" sourceRef="processRequest" targetRef="dataValidate" />
+    <bpmn:serviceTask id="dataValidate" name="Data Validation">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="dataValidate" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0nn21ju</bpmn:incoming>
+      <bpmn:incoming>Flow_0u65ise</bpmn:incoming>
+      <bpmn:outgoing>Flow_1mw9spw</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1mw9spw" sourceRef="dataValidate" targetRef="Gateway_1w7unil" />
+    <bpmn:exclusiveGateway id="Gateway_1w7unil" default="Flow_0u2q5ky">
+      <bpmn:incoming>Flow_1mw9spw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0u2q5ky</bpmn:outgoing>
+      <bpmn:outgoing>validationFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0u2q5ky" name="ValidatedData" sourceRef="Gateway_1w7unil" targetRef="Activity_1fr76t5" />
+    <bpmn:userTask id="userTask" name="Username/UserId check">
+      <bpmn:extensionElements />
+      <bpmn:incoming>validationFailed</bpmn:incoming>
+      <bpmn:outgoing>Flow_0u65ise</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="validationFailed" name="Data Validation Failed " sourceRef="Gateway_1w7unil" targetRef="userTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isValidatedFailed = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0u65ise" sourceRef="userTask" targetRef="dataValidate" />
+    <bpmn:callActivity id="Activity_1fr76t5" name="EnrichData">
+      <bpmn:extensionElements>
+        <zeebe:calledElement processId="enrichDataSubProcess" propagateAllChildVariables="true" />
+        <zeebe:ioMapping>
+          <zeebe:input source="=userRequest.address" target="address" />
+          <zeebe:input source="=userRequest.phoneNumber" target="phonenumber" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0u2q5ky</bpmn:incoming>
+      <bpmn:outgoing>Flow_0izfkn6</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true">
+        <bpmn:extensionElements>
+          <zeebe:loopCharacteristics inputCollection="=userRequest.products" inputElement="products" outputCollection="processedProducts" outputElement="=processedProduct" />
+        </bpmn:extensionElements>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:callActivity>
+    <bpmn:sequenceFlow id="Flow_0izfkn6" sourceRef="Activity_1fr76t5" targetRef="finalDataOutput" />
+    <bpmn:serviceTask id="finalDataOutput" name="FinalDataOutput">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="finalDataOutput" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0izfkn6</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gd6dqx</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0gd6dqx" sourceRef="finalDataOutput" targetRef="Event_049t1pf" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="onboardRequest">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0i5cbd1_di" bpmnElement="processRequest">
+        <dc:Bounds x="300" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0p174ox" bpmnElement="dataValidate">
+        <dc:Bounds x="490" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1w7unil_di" bpmnElement="Gateway_1w7unil" isMarkerVisible="true">
+        <dc:Bounds x="725" y="75" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_01er71u_di" bpmnElement="userTask">
+        <dc:Bounds x="490" y="240" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_049t1pf_di" bpmnElement="Event_049t1pf">
+        <dc:Bounds x="1292" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fr76t5_di" bpmnElement="Activity_1fr76t5">
+        <dc:Bounds x="940" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ykcj7z_di" bpmnElement="finalDataOutput">
+        <dc:Bounds x="1130" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0d0n32k_di" bpmnElement="Flow_0d0n32k">
+        <di:waypoint x="218" y="100" />
+        <di:waypoint x="300" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nn21ju_di" bpmnElement="Flow_0nn21ju">
+        <di:waypoint x="400" y="100" />
+        <di:waypoint x="490" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mw9spw_di" bpmnElement="Flow_1mw9spw">
+        <di:waypoint x="590" y="100" />
+        <di:waypoint x="725" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0u2q5ky_di" bpmnElement="Flow_0u2q5ky">
+        <di:waypoint x="775" y="100" />
+        <di:waypoint x="940" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="825.0000000000011" y="82" width="69" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_16hz2qk_di" bpmnElement="validationFailed">
+        <di:waypoint x="750" y="125" />
+        <di:waypoint x="750" y="280" />
+        <di:waypoint x="590" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="730" y="200" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0u65ise_di" bpmnElement="Flow_0u65ise">
+        <di:waypoint x="540" y="240" />
+        <di:waypoint x="540" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0izfkn6_di" bpmnElement="Flow_0izfkn6">
+        <di:waypoint x="1040" y="100" />
+        <di:waypoint x="1130" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gd6dqx_di" bpmnElement="Flow_0gd6dqx">
+        <di:waypoint x="1230" y="100" />
+        <di:waypoint x="1292" y="100" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
